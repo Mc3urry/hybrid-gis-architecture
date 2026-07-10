@@ -1,0 +1,28 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: martin
+spec:
+  replicas: 3        # stateless tile tier scales horizontally; storm response IS this line
+  selector:
+    matchLabels: { app: martin }
+  template:
+    metadata:
+      labels: { app: martin }
+    spec:
+      containers:
+        - name: martin
+          image: ghcr.io/maplibre/martin:v0.14.2
+          ports: [{ containerPort: 3000 }]
+          env:
+            - name: DATABASE_URL
+              value: postgresql://gis:gis_dev_password@postgis:5432/public_gis
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: martin
+spec:
+  type: LoadBalancer
+  selector: { app: martin }
+  ports: [{ port: 80, targetPort: 3000 }]

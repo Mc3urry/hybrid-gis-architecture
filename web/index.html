@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Public Outage Map — Hybrid GIS Reference Architecture</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link href="https://unpkg.com/maplibre-gl@4.5.0/dist/maplibre-gl.css" rel="stylesheet" />
+  <script src="https://unpkg.com/maplibre-gl@4.5.0/dist/maplibre-gl.js"></script>
+  <style>
+    html, body { margin: 0; height: 100%; }
+    #map { height: 100%; }
+    .badge { position: absolute; top: 10px; left: 10px; z-index: 1;
+             background: #1a3a5c; color: #fff; padding: 8px 12px;
+             font: 13px/1.4 sans-serif; border-radius: 4px; max-width: 340px; }
+    .legend { position: absolute; bottom: 24px; left: 10px; z-index: 1;
+              background: #fff; padding: 8px 12px; font: 12px/1.6 sans-serif;
+              border-radius: 4px; box-shadow: 0 1px 4px rgba(0,0,0,.3); }
+    .sw { display:inline-block; width:12px; height:12px; border-radius:50%;
+          margin-right:6px; vertical-align:-1px; }
+  </style>
+</head>
+<body>
+  <div class="badge">
+    <b>DFW metroplex public outage map — the storm-scale tier</b><br/>
+    Vector tiles from Martin + PostGIS. Zero per-viewer license cost.
+    Customer PII and exact device locations never cross the boundary;
+    outage points are grid-snapped (~200 m).
+  </div>
+  <div class="legend">
+    <b>Active outages</b><br/>
+    <span class="sw" style="background:#d7301f"></span>over 250 customers<br/>
+    <span class="sw" style="background:#fc8d59"></span>50–250 customers<br/>
+    <span class="sw" style="background:#fdcc8a"></span>under 50 customers<br/>
+    <b>Feeders</b> — line color = voltage class
+  </div>
+  <div id="map"></div>
+  <script>
+    const map = new maplibregl.Map({
+      container: 'map',
+      style: {
+        version: 8,
+        sources: {
+          osm: {
+            type: 'raster',
+            tiles: ['https://tile.openstreetmap.org/{z}/{x}/{y}.png'],
+            tileSize: 256,
+            attribution: '&copy; OpenStreetMap contributors'
+          }
+        },
+        layers: [{ id: 'osm', type: 'raster', source: 'osm' }]
+      },
+      center: [-97.04, 32.90],
+      zoom: 9.2
+    });
+    map.addControl(new maplibregl.NavigationControl());
+
+    map.on('load', () => {
+      map.addSource('feeders', {
+        type: 'vector',
+        tiles: ['http://localhost:3000/feeders_public/{z}/{x}/{y}'],
+        minzoom: 7, maxzoom: 16
+      });
+      map.addSource('outages', {
+        type: 'vector',
+        tiles: ['http://localhost:3000/outages_public/{z}/{x}/{y}'],
+        minzoom: 7, maxzoom: 16
+      });
+      map.addLayer({
+        id: 'feeders-line',
+        type: 'line',
+        source: 'feeders',
+        'source-layer': 'feeders_public',
+        paint: {
+          'line-color': ['match', ['get', 'voltage_class'],
+            '138kV/25kV',  '#2166ac',
+            '69kV/12.5kV', '#67a9cf',
+            '#999999'],
+          'line-width': 1.4,
+          'line-opacity': 0.8
+        }
+      });
+      map.addLayer({
+        id: 'outage-pts',
+        type: 'circle',
+        source: 'outages',
+        'source-layer': 'outages_public',
+        paint: {
+          'circle-radius': ['match', ['get', 'customers_band'],
+            'over_250', 11, '50_250', 8, 'under_50', 5, 5],
+          'circle-color': ['match', ['get', 'customers_band'],
+            'over_250', '#d7301f', '50_250', '#fc8d59', 'under_50', '#fdcc8a', '#ccc'],
+          'circle-stroke-color': '#7f0000',
+          'circle-stroke-width': 1
+        }
+      });
+      map.on('click', 'outage-pts', (e) => {
+        const p = e.features[0].properties;
+        new maplibregl.Popup()
+          .setLngLat(e.lngLat)
+          .setHTML(`<b>${p.outage_id}</b><br/>cause: ${p.cause_category}<br/>` +
+                   `customers: ${p.customers_band}<br/>` +
+                   `est. restoration: ${p.est_restoration || 'assessing'}`)
+          .addTo(map);
+      });
+      map.on('mouseenter', 'outage-pts', () => map.getCanvas().style.cursor = 'pointer');
+      map.on('mouseleave', 'outage-pts', () => map.getCanvas().style.cursor = '');
+    });
+  </script>
+</body>
+</html>

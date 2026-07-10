@@ -1,0 +1,90 @@
+# CI: stands up a real PostGIS, runs the init SQL, and verifies the pipeline.
+# The typmod assertion is a permanent regression test for OPS-001 / ADR-008.
+name: ci
+
+on: [push, pull_request]
+
+jobs:
+  database-and-pipeline:
+    runs-on: ubuntu-latest
+    services:
+      postgis:
+        image: postgis/postgis:16-3.4
+        env:
+          POSTGRES_USER: gis
+          POSTGRES_PASSWORD: gis_dev_password
+          POSTGRES_DB: public_gis
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U gis -d public_gis"
+          --health-interval 5s --health-timeout 3s --health-retries 12
+
+    env:
+      PGPASSWORD: gis_dev_password
+      PUBLIC_GIS_DSN: host=localhost port=5432 dbname=public_gis user=gis password=gis_dev_password
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run init SQL (same files Docker runs on first boot)
+        run: |
+          for f in db/init/*.sql; do
+            echo "== $f"
+            psql -h localhost -U gis -d public_gis -v ON_ERROR_STOP=1 -f "$f"
+          done
+
+      - name: Assert row counts (synthetic DFW network loaded)
+        run: |
+          psql -h localhost -U gis -d public_gis -v ON_ERROR_STOP=1 -c "
+            DO \$\$
+            BEGIN
+              ASSERT (SELECT count(*) FROM sor.substations) = 32, 'substations';
+              ASSERT (SELECT count(*) FROM sor.feeders)     = 320, 'feeders';
+              ASSERT (SELECT count(*) FROM sor.devices)     = 1600, 'devices';
+              ASSERT (SELECT count(*) FROM sor.outages)     = 120, 'outages';
+            END \$\$;"
+
+      - name: "ADR-008 regression: public views must have typed geometry (OPS-001)"
+        run: |
+          psql -h localhost -U gis -d public_gis -v ON_ERROR_STOP=1 -c "
+            DO \$\$
+            BEGIN
+              ASSERT (SELECT srid FROM geometry_columns
+                      WHERE f_table_name = 'feeders_public') = 4326,
+                     'feeders_public: srid metadata missing - Martin will skip it';
+              ASSERT (SELECT type FROM geometry_columns
+                      WHERE f_table_name = 'feeders_public') = 'LINESTRING',
+                     'feeders_public: geometry type untyped';
+              ASSERT (SELECT srid FROM geometry_columns
+                      WHERE f_table_name = 'outages_public') = 4326,
+                     'outages_public: srid metadata missing - Martin will skip it';
+              ASSERT (SELECT type FROM geometry_columns
+                      WHERE f_table_name = 'outages_public') = 'POINT',
+                     'outages_public: geometry type untyped';
+            END \$\$;"
+
+      - name: "Boundary test: no sensitive columns in public views"
+        run: |
+          psql -h localhost -U gis -d public_gis -v ON_ERROR_STOP=1 -c "
+            DO \$\$
+            BEGIN
+              ASSERT NOT EXISTS (
+                SELECT 1 FROM information_schema.columns
+                WHERE table_schema = 'public'
+                  AND table_name IN ('feeders_public','outages_public')
+                  AND column_name IN ('owner_name','customer_name','account_number',
+                                      'crew_notes','customers_served','customers_affected')
+              ), 'sensitive column leaked into a public view';
+            END \$\$;"
+
+      - name: Run the sync end-to-end (simulate mode)
+        run: |
+          pip install -q psycopg2-binary requests
+          python sync/sync_from_sor.py --simulate
+          psql -h localhost -U gis -d public_gis -v ON_ERROR_STOP=1 -c "
+            DO \$\$
+            BEGIN
+              ASSERT (SELECT status FROM sor.sync_log ORDER BY run_id DESC LIMIT 1) = 'ok',
+                     'sync run did not finish ok';
+            END \$\$;"
