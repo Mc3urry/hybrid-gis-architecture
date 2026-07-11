@@ -115,4 +115,31 @@ Full capabilities confirmed over plain IPv4 afterward.
 
 ---
 
-*(Add future entries above this line: OPS-004, OPS-005, ...)*
+## OPS-004 — Git index corrupted by cloud-sync (OneDrive) mid-write
+
+**Date:** 2026-07-11 · **Severity:** git unusable (`fatal: index file corrupt`) · **Data loss: none**
+
+**Symptom.** `git status` failed with `error: bad index file sha1 signature /
+fatal: index file corrupt`. Everything of value had been pushed to the
+remote beforehand.
+
+**Root cause.** The repo lives inside a OneDrive-synced folder; the sync
+client and git wrote .git/index concurrently. The index is a rebuildable
+cache of the staging area — corruption there is cosmetic as long as
+.git/objects is intact (`git fsck` confirmed it was).
+
+**Fix.** Delete and rebuild: `rm .git/index && git reset`. fsck clean
+afterward; working tree unaffected.
+
+**Standing rules.**
+- The index is disposable; objects are not. Diagnose with `git fsck` before
+  panicking: "index corrupt" and "object corrupt" are different severities.
+- Push frequently precisely because the local .git sits on synced storage —
+  the remote is the real safety net.
+- If this recurs, either move the working clone outside OneDrive or exclude
+  the .git folder from sync; the OneDrive copy of committed work is
+  redundant with GitHub anyway.
+
+---
+
+*(Add future entries above this line: OPS-005, OPS-006, ...)*

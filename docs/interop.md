@@ -7,7 +7,7 @@ directions. Same data, multiple standards, multiple clients.
 |---|----------|--------------|----------|--------|-------|
 | 1 | GeoServer (PostGIS views) | WFS 2.0 / GeoJSON | Browser (raw request) | ☑ done | GetFeature on public:outages_public returns boundary-filtered GeoJSON |
 | 2 | GeoServer | WFS 2.0 | QGIS | ☑ done | See img/interop-qgis.png; required OPS-003 resolution first |
-| 3 | GeoServer | WFS 2.0 | ArcGIS Pro | ☐ | Esri client consuming open-source services — the money screenshot |
+| 3 | GeoServer | WFS 2.0 | ArcGIS Pro | ☑ done | Esri's flagship client rendering the open-source stack; banded values visible in Pro's popup; no axis-order issues at WFS 2.0 |
 | 4 | AGOL hosted view | ArcGIS REST / GeoJSON | sync_from_sor.py | ☑ done | The Phase 3 pipeline (see ADR-004 observed consequences) |
 | 5 | AGOL hosted view | ArcGIS REST | QGIS | ☑ done | Same project as row 2 — both stacks in one map; ADR-005 grid-snap offset visible between AGOL source points and public-view points |
 | 6 | ArcGIS Enterprise | WMS / OGC API - Features | QGIS + MapLibre | ☐ blocked | Awaiting Phase 4 (UTD license) |
@@ -36,7 +36,19 @@ One QGIS project consuming both stacks simultaneously:
 - AGOL REST: outages_sor_public_view, anonymous — no credentials configured, proving the public boundary serves external standards clients
 - Visible detail: AGOL points sit slightly offset from their public-view counterparts — the ~200 m ST_SnapToGrid location fuzz from ADR-005, observable in the map
 
-## Part 3 — ArcGIS Pro (next)
+## Part 3 — ArcGIS Pro (done)
 
-Insert -> Connections -> Server -> New WFS Server -> http://127.0.0.1:8085/geoserver/public/ows
-Add both layers from the Catalog pane. Screenshot = row 3, the Esri-client-on-open-services proof.
+ArcGIS Pro consuming the open-source stack over WFS 2.0 — the
+Esri-client-on-open-services proof:
+
+![ArcGIS Pro consuming GeoServer WFS](img/interop-arcgis-pro.png)
+
+- Connection: Insert -> Connections -> Server -> New WFS Server ->
+  http://127.0.0.1:8085/geoserver/public/ows, version 2.0.0, no credentials
+- Both layers added from the Catalog pane; symbolized outages by
+  customers_band; popup shows the boundary-shaped attributes (banded values,
+  no crew_notes) inside Esri's own UI
+- Notably clean: no EPSG:4326 axis-order flip between GeoServer and Pro at
+  WFS 2.0 — the classic OGC interop fight did not materialize here
+
+**Matrix status: 6 of 7 — row 6 (ArcGIS Enterprise) awaits the Phase 4 license.**
