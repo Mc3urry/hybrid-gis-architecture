@@ -71,7 +71,7 @@ ggsave("outage_map.png", p, width = 10, height = 8, dpi = 150)
 cat("wrote cause_summary.csv and outage_map.png\n")
 
 # --- Alternative access path: pure OGC, no database credentials at all ------
-# Once GeoServer publishes the public views as WFS (GUIDE Phase 5), an
+# Once GeoServer publishes the public views as WFS (SETUP.md step 4), an
 # external analyst needs NO database access -- the standards bridge serves R:
 #   outages <- st_read(paste0("WFS:http://127.0.0.1:8085/geoserver/public/ows?",
 #                             "service=WFS&request=GetFeature&",

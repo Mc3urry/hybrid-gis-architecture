@@ -31,7 +31,7 @@ are snapped to a ~200 m grid. The boundary is enforced in SQL — see ADR-005.
 ```
 hybrid-gis-architecture/
 ├── docker-compose.yml      # the open-source half, one command to run
-├── GUIDE.md                # step-by-step build instructions, start here
+├── SETUP.md                # reproduction guide: clean clone -> running system
 ├── .github/workflows/      # CI: real PostGIS, init SQL, boundary + ADR-008 regression tests
 ├── analytics/              # R: the analyst persona consuming the same platform
 ├── db/init/                # schema, synthetic network, public-safe views (auto-run on first boot)

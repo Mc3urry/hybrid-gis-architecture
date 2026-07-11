@@ -13,6 +13,9 @@ analytics/*.png
 # Local env / secrets
 .env
 
+# Personal planning notes (not part of the public repo)
+PLAYBOOK.md
+
 # OS noise
 Thumbs.db
 .DS_Store
