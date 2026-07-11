@@ -12,10 +12,12 @@ alternatives are compared: Esri-hosted delivery through ArcGIS Online
 (Option B), and the hybrid architecture implemented in this repository
 (Option C).
 
-Pricing figures cited below were gathered in July 2026 from publicly
-available Esri and cloud-provider pages and are marked [verify]; current
-figures should be confirmed before this analysis is cited in any
-procurement or design decision. The structure of the comparison, rather
+Pricing figures cited below were verified in July 2026 against publicly
+available Esri and cloud-provider pages and recent third-party pricing
+guides (Section 7); the sole figure not publicly listed — ArcGIS
+Enterprise licensing — is identified as requiring vendor quotation. Prices
+change, and current figures should be confirmed before this analysis is
+cited in any procurement or design decision. The structure of the comparison, rather
 than any individual figure, is intended as the durable contribution.
 
 ## 2. Workload Characterization
@@ -41,20 +43,25 @@ scales elastically under load is better matched to the workload.
 Publicly shared ArcGIS Online content does not require viewer accounts, so
 per-viewer licensing overstates the cost of this option; the material costs
 lie elsewhere. Staff publishing and administration require Creator-level
-user types (approximately $500–760 per user per year [verify]). Premium
-capabilities are metered in credits ($120 per 1,000 [verify]), with feature
-storage billed monthly. Of greatest relevance to this workload,
-high-volume public feature serving is positioned by Esri under the Premium
-Feature Data Store, from approximately $2,700 per month [verify]. Because
+user types (approximately $700 per user per year at 2026 U.S. list;
+Viewer seats, for comparison, list at $100 per year). Premium capabilities
+are metered in credits (approximately $100–120 per 1,000 across recent
+sources), with feature storage billed monthly. Of greatest relevance to
+this workload, high-volume public feature serving is positioned by Esri
+under the Premium Feature Data Store, a fixed-price dedicated-database
+offering from approximately $2,700 per month at its entry level, with
+higher tiers quoted. Because
 standard hosted layers are served from shared infrastructure, sustained
 six-figure concurrency would in practice require this premium tier,
 purchased year-round to provide readiness for a small number of storm days.
 
 ### 3.2 Option B — Self-Hosted ArcGIS Enterprise Provisioned for Peak
 
-ArcGIS Enterprise licensing is quoted rather than list-priced and typically
-represents an annual five-figure commitment [verify with an Esri
-representative]. The dominant cost, however, is infrastructural: Enterprise
+ArcGIS Enterprise licensing is quoted through sales rather than publicly
+list-priced (Esri's Enterprise pricing page directs buyers to a
+representative); industry guides characterize typical deployments as an
+annual five-figure commitment, and this analysis treats that figure as
+requiring vendor quotation. The dominant cost, however, is infrastructural: Enterprise
 components do not autoscale on the timescale of a developing storm, so
 public-facing capacity must be provisioned in advance and carried
 continuously. Operational staffing requirements are comparable to those of
@@ -69,10 +76,13 @@ Under the hybrid design, the Esri platform remains the system of record,
 priced per seat for a bounded internal population, while public delivery is
 served by open-source components. The delivery tier (PostGIS, Martin,
 GeoServer) carries no license cost and operates on one to two modest
-virtual machines (approximately $50–150 per month [verify]) because a
-content delivery network absorbs peak demand. CDN egress is priced at
-commodity rates (approximately $0–0.09 per GB [verify]) and is incurred per
-event rather than provisioned in advance. The honest cost of this option is
+virtual machines (approximately $50–150 per month at commodity
+cloud-instance rates) because a content delivery network absorbs peak
+demand. CDN pricing has moved further in this option's favor: as of 2026,
+Amazon CloudFront offers flat-rate plans with no overage charges — $15 per
+month covers 50 TB of transfer and 10 million requests (Pro tier), and
+$200 per month covers 125 million requests (Business tier) — meaning
+storm-day traffic incurs no marginal cost at all. The honest cost of this option is
 engineering time: assembly, hardening, and operational documentation — the
 expense that Options A and B outsource to the vendor.
 
@@ -83,16 +93,18 @@ tile requests each at roughly 30 KB per tile, or on the order of 90 GB of
 tile traffic, of which approximately 95 percent is served from CDN cache
 given the uniformity of the tile content.
 
-Under Option C, the marginal cost of that storm day is approximately $8 of
-CDN egress in addition to origin infrastructure already operating in the
-$100-per-month class; ten such events per year leave the delivery tier on
-the order of $1,000–2,000 annually, all-in. Option A, carrying a Premium
-Feature Data Store year-round for equivalent readiness, is on the order of
-$30,000 or more annually [verify]. Option B, provisioned for the same peak,
-typically exceeds Option C by an order of magnitude in infrastructure alone
-before licensing is considered. While the individual figures are
-approximate, the separation between options is large enough that reasonable
-variation in the inputs does not change the ordering.
+Under Option C, that storm day — roughly 3 million requests and 90 GB of
+transfer — fits entirely within CloudFront's $15-per-month flat-rate plan;
+its marginal cost is zero. The delivery tier's all-in annual cost is
+therefore origin infrastructure (on the order of $1,200–1,800) plus a CDN
+plan ($180–2,400 depending on tier), or roughly $1,500–4,000 per year with
+storm readiness included. Option A, carrying a Premium Feature Data Store
+year-round for equivalent readiness, is on the order of $32,000 or more
+annually at the verified entry price. Option B, provisioned for the same
+peak, typically exceeds Option C by an order of magnitude in
+infrastructure alone before licensing is considered. The separation
+between options is large enough that reasonable variation in the inputs
+does not change the ordering.
 
 ## 5. Counterargument
 
@@ -121,3 +133,20 @@ and multi-year total-cost-of-ownership discounting is omitted as
 unnecessary given the order-of-magnitude separation observed. Finally, the
 value of vendor support on the public tier, while acknowledged in Section
 5, is not quantified.
+
+## 7. Sources
+
+Figures verified July 2026 against the following (U.S. list prices):
+
+- Esri, ArcGIS Online pricing and user types (Creator ≈ $700/yr; Viewer
+  $100/yr): esri.com/en-us/arcgis/products/arcgis-online/buy and
+  esri.com/en-us/arcgis/products/user-types/buy
+- Esri, ArcGIS Online credits ($100–120 per 1,000 across recent sources):
+  esri.com/en-us/arcgis/products/credits/buy
+- Esri, Premium Feature Data Store (from ≈ $2,700/month; fixed-price
+  dedicated tiers): esri.com/en-us/arcgis/products/premium-feature-data-store/buy
+- Esri, ArcGIS Enterprise pricing (quotation via sales; no public list):
+  esri.com/en-us/arcgis/products/arcgis-enterprise/pricing
+- Amazon Web Services, CloudFront pricing (flat-rate plans, no overage:
+  Free $0 / Pro $15 / Business $200 / Premium $1,000 per month):
+  aws.amazon.com/cloudfront/pricing
