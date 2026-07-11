@@ -25,3 +25,15 @@ in application code is one bug away from a breach of either.
 + Clear, auditable answer to "how do you know nothing sensitive leaks?"
 - Adding a public field requires a view migration (accepted: that friction is
   the control working).
+
+## Evidence (post-implementation)
+
+![Same outage, two sides of the boundary](../img/boundary-two-views.png)
+
+The same outage (AGOL-005) viewed through the source layer — crew notes,
+exact customer count — and through the public view, where crew_notes does
+not exist as a field. Below: GeoServer, connected as svc_geoserver, can
+enumerate exactly two publishable layers; sor.* is not merely hidden, it is
+unreachable for that role.
+
+![svc_geoserver sees only the public views](../img/geoserver-boundary-layerlist.png)

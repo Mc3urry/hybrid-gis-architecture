@@ -20,7 +20,9 @@ directions. Same data, multiple standards, multiple clients.
   is the container).
 - The store's publishable-layer list showed exactly feeders_public and
   outages_public and nothing else: svc_geoserver inherits only tile_reader,
-  so the boundary is visible in GeoServer's own UI.
+  so the boundary is visible in GeoServer's own UI:
+
+  ![GeoServer layer list under svc_geoserver](img/geoserver-boundary-layerlist.png)
 - Both layers published with declared SRS EPSG:4326, bounds computed from data.
 - Verified: Layer Preview (OpenLayers) + raw WFS GetFeature as GeoJSON.
 
