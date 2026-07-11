@@ -3,9 +3,10 @@
 Status: Accepted
 
 ## Context
-For an outage map, peak load and peak importance are the same moment: the
-storm. An architecture that cannot answer "what breaks first at 100x?" is a
-diagram, not a design.
+For an outage map, peak load and peak operational importance coincide
+during severe weather. An architecture description is incomplete unless it
+identifies, for each tier, the first component expected to fail under a
+large demand multiple and the consequences of that failure.
 
 ## Decision / Analysis
 - Martin (stateless): scales horizontally behind a load balancer
@@ -26,3 +27,22 @@ diagram, not a design.
   reach the Utility Network.
 - CDN adds cache-invalidation coupling to the sync cadence (documented:
   invalidate on refresh, or set max-age to the outage sync interval).
+
+## Observed consequences (post-implementation)
+- The sync's failure isolation worked on its first real failure: a
+  misconfigured service URL produced a clean `error` row in sor.sync_log
+  (403, offending URL preserved) with no data corruption and automatic
+  recovery on the next scheduled run.
+- Dozens of scheduled runs with REFRESH CONCURRENTLY have produced zero
+  observed public read downtime; the audit trail in sync_log is itself an
+  operational artifact (staleness alerting hooks onto sync_log.status).
+- A failure domain missing from the original analysis surfaced: CLICKED
+  CONFIGURATION IS STATE. GeoServer's admin-UI config was lost to a
+  container recreation because it had no volume (OPS-003) — state needs a
+  home just like data does. The same lesson will apply to Portal's content
+  directory and Server's config store in Phase 4.
+- Local dev adds its own failure modes worth separating from architecture:
+  dual-stack loopback confusion and cloud-sync git corruption
+  (OPS-003/OPS-004) were environment problems, not design problems — but an
+  architect must be able to tell the difference quickly, and docker logs /
+  git fsck were the discriminators.

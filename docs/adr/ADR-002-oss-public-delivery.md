@@ -19,4 +19,18 @@ A CDN in front of Martin absorbs the storm spike.
 + Public load physically cannot touch the system of record (see ADR-006).
 - We own uptime of the public tier — precisely when it matters most (storms).
   Mitigated: stateless tier + CDN + read-only workload.
-- Two stacks to operate (accepted: that is the hybrid tradeoff, and the point).
+- Two stacks must be operated (accepted: this is the tradeoff inherent to a hybrid architecture).
+
+## Observed consequences (post-implementation)
+- Zero-license public delivery is running in practice: 320-feeder network +
+  live outages served as vector tiles to an anonymous MapLibre client, with
+  the sync updating it on a minutes cadence.
+- The storm-scale claim is modeled, not yet load-tested — the economics are
+  made explicit in ../cost-model.md, including the honest boundary where
+  Esri-hosted delivery remains defensible.
+- Grid-snapped, band-aggregated tiles are identical for every viewer, which
+  is what makes the CDN-absorbs-the-storm strategy credible; no CDN is
+  fronted in the reference deployment yet.
+- "We own uptime" proved true immediately: the public tier's failures so far
+  (OPS-001, OPS-003) were ours to diagnose — and both post-mortems made the
+  system and its documentation stronger.

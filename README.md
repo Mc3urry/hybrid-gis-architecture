@@ -40,6 +40,7 @@ hybrid-gis-architecture/
 ├── docs/
 │   ├── architecture.md     # system diagram, data flow, trust boundary
 │   ├── adr/                # ADR-001 .. ADR-008 (the tradeoff decisions)
+│   ├── cost-model.md       # the economics behind ADR-002: three delivery options, crossover analysis
 │   ├── enterprise-deployment.md  # open-source -> ArcGIS Enterprise translation + install order
 │   └── operations.md       # incident runbook (symptom -> diagnosis -> fix -> rule)
 └── k8s/                    # illustrative Kubernetes manifests

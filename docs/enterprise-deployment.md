@@ -13,7 +13,7 @@ architecture works (ADR-004).
 | PostGIS `sor.*` schema | Enterprise geodatabase in PostgreSQL | Same engine you already know — Esri's gdb is a schema + SDE layer *on top of* Postgres. Created with Pro's "Create Enterprise Geodatabase" tool. |
 | Hand-written DDL (01_schema.sql) | Electric UN Foundation asset package via untools | Your WaterEssentials runbook applies verbatim: cloned Pro env → untools → Asset Package to Geodatabase / Stage Utility Network / Apply Asset Package. |
 | Martin + GeoServer | ArcGIS Server (federated) | One server publishes map, feature, and OGC (WMS/WFS/OGC API - Features) services. |
-| Keycloak | Portal for ArcGIS | Named users, groups, sharing model, identity federation (SAML/OIDC if you want to point it AT Keycloak later — architect flex). |
+| Keycloak | Portal for ArcGIS | Named users, groups, sharing model; identity federation (SAML/OIDC) permits Portal to delegate authentication to an external provider such as Keycloak. |
 | PostGIS materialized views | Hosted feature layers in ArcGIS Data Store | The relational Data Store is Esri-managed PostgreSQL for *hosted* content. Your authoritative UN lives in the enterprise gdb; quick operational layers (e.g. outages) can be hosted. |
 | nginx + MapLibre | Web Adaptor + Experience Builder / JS SDK app | Web Adaptor is the reverse proxy (their nginx); Experience Builder is the low-code client tier. |
 | docker-compose.yml | ArcGIS Enterprise Builder / installers + federation | No container equivalent in a base deployment — this is why the deployment doc you'll write has real value. |
@@ -35,7 +35,7 @@ Single-machine base deployment is normal and interview-defensible (ADR it):
 - Open ports: 6443 (Server), 7443 (Portal), 2443 (Data Store), 443 (Web
   Adaptor/IIS). Internal-only except 443.
 
-## 4. Install order (the federation dance)
+## 4. Installation and Federation Order
 
 ArcGIS Enterprise Builder automates all of this on one machine — but do it
 manually once; the manual path is what you're learning:
@@ -64,9 +64,11 @@ manually once; the manual path is what you're learning:
    Asset Package to Geodatabase (or Stage Utility Network + Apply Asset
    Package for the enterprise-gdb path). Version quadruple rule applies.
 3. **Publish** the UN as branch-versioned feature services from Pro
-   (UN editing is service-based by design — that's an ADR-001 talking point).
+   (Utility Network editing is service-based by design; see ADR-001).
 4. **Outages layer**: create a hosted feature layer (Data Store) with the
-   sor.outages fields — in a real utility this is fed by the OMS; say so.
+   sor.outages fields. In a production utility this layer would be fed by the
+   outage management system; the reference deployment documents this
+   substitution explicitly.
 
 ## 6. Services and the OGC bridge
 

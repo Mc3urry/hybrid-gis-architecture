@@ -22,7 +22,8 @@ source for Martin/GeoServer.
   ADR-002 exists to avoid (rejected).
 
 ## Observed consequences (post-implementation)
-"The boundary is inspectable in SQL" cuts both ways: the SQL must also honor
+The property that the boundary is inspectable in SQL carries a reciprocal
+obligation: the SQL must also honor
 the serving tier's contract. Transforming functions (ST_SnapToGrid,
 ST_SimplifyPreserveTopology) return untyped geometry and stripped the views'
 SRID metadata, making them invisible to Martin. Explicit typmod casts are now
