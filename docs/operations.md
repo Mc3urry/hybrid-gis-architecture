@@ -36,4 +36,37 @@ a fresh volume) and hard-refresh the browser (cached 404 tiles).
 
 ---
 
-*(Add future entries above this line: OPS-002, OPS-003, ...)*
+## OPS-002 — Silent NULLs from a field-name drift in the AGOL feed
+
+**Date:** 2026-07-11 · **Severity:** data quality (one attribute NULL for all synced rows) · **See:** ADR-004 field-mapping contract
+
+**Symptom.** R analytics (outage_analysis.R) reported NA for all customer
+sums and ggplot dropped 7 rows. SQL confirmed: every AGOL-synced outage had
+customers_affected = NULL. Every other field mapped fine. No errors anywhere
+in the pipeline.
+
+**Diagnosis path.**
+1. psql: NULLs confined to rows with outage_id LIKE 'AGOL%' — so the AGOL
+   leg, not the schema or the simulate path.
+2. AGOL item -> Data -> Fields: the field's real Name was
+   `customer_affected` (singular) — created with a typo; the sync looks up
+   `customers_affected` (plural). dict.get() returned None, the upsert wrote
+   NULL, and nothing complained.
+
+**Fix.** Added `customer_affected` as a lookup fallback in sync_from_sor.py.
+Hardened the R aggregations with na.rm = TRUE plus an explicit n_missing
+column — analytics should SURFACE upstream data quality problems, not be
+blanked out by them or silently paper over them.
+
+**Standing rules.**
+- After creating any AGOL/Enterprise layer, verify actual field Names (not
+  aliases) against the sync's lookups BEFORE first sync — one f=geojson
+  request read carefully costs a minute.
+- Aggregations in analytics always use na.rm plus an explicit missing-count
+  column: report the hole, don't fall into it.
+- Note the pattern: the analyst persona caught what the pipeline could not.
+  Downstream consumers are part of the platform's error detection.
+
+---
+
+*(Add future entries above this line: OPS-003, OPS-004, ...)*

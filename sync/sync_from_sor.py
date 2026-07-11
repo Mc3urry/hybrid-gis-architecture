@@ -129,7 +129,7 @@ def pull_arcgis(cur, service_url):
                     p.get("crew_notes"),
                     p.get("started_at"),
                     p.get("est_restoration"),
-                    p.get("customers_affected") or p.get("CUST_AFFECTED"),
+                    p.get("customers_affected") or p.get("CUST_AFFECTED") or p.get("customer_affected"),
                     json.dumps(f["geometry"]),
                 ),
             )

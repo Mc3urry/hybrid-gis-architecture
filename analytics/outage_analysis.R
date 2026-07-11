@@ -36,8 +36,9 @@ cause_summary <- outages |>
   group_by(cause_category) |>
   summarise(
     n              = n(),
-    customers      = sum(customers_affected),
-    mean_customers = round(mean(customers_affected))
+    customers      = sum(customers_affected, na.rm = TRUE),
+    mean_customers = round(mean(customers_affected, na.rm = TRUE)),
+    n_missing      = sum(is.na(customers_affected))   # surface data quality, don't hide it
   ) |>
   arrange(desc(customers))
 
@@ -49,7 +50,7 @@ exposure <- outages |>
   st_drop_geometry() |>
   filter(status == "active") |>
   group_by(voltage_class) |>
-  summarise(active_outages = n(), customers_out = sum(customers_affected))
+  summarise(active_outages = n(), customers_out = sum(customers_affected, na.rm = TRUE))
 
 print(exposure)
 
