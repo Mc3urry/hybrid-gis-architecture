@@ -1,0 +1,9 @@
+# Normalize to LF in the repo and in working copies. These files are
+# bind-mounted into Linux containers (db/init, web) and parsed by
+# Linux tooling in CI - LF everywhere removes a whole class of weirdness.
+* text=auto eol=lf
+
+# Binary safety net
+*.png binary
+*.gdb binary
+*.zip binary

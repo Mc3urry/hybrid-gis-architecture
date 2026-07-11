@@ -24,3 +24,21 @@ Option (b) is the documented evolution path when a real OMS integration exists.
   tighten toward (b) if the OMS can push).
 - Full-table paging is O(n); move to editedDate-filtered incremental pulls as
   outage volume grows.
+
+## Observed consequences (post-implementation, Phase 3 / AGOL)
+- The sync deliberately reads a public *view* of the source layer, not the
+  source itself: the pipeline is an anonymous consumer and never holds
+  credentials or sees behind the boundary. crew_notes was verified absent
+  from the feed before the pipeline ever ingested it (defense at two layers,
+  cf. ADR-005).
+- Filtered views break state-transition propagation: a view filtered to
+  status = 'active' would silently drop rows the moment they flip to
+  'restored', so the sync would never see the transition and the local copy
+  would stay active forever. Rule: the FEED must carry all states (hide
+  fields, not rows); state filtering belongs at the final serving boundary
+  (the outages_public matview). Verified with a seeded 'restored' outage:
+  present in sor.outages, correctly absent from the public map.
+- Field mapping is a real contract: the REST feed's property names must match
+  the upsert's lookups (lowercase here), and FK integrity (feeder_id must
+  exist in sor.feeders) means upstream data quality failures surface as sync
+  errors in sor.sync_log — which is where you want them.

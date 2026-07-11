@@ -1,0 +1,18 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+
+# R
+.Rhistory
+.RData
+.Rproj.user/
+analytics/*.csv
+analytics/*.png
+
+# Local env / secrets
+.env
+
+# OS noise
+Thumbs.db
+.DS_Store
