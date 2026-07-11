@@ -69,4 +69,50 @@ blanked out by them or silently paper over them.
 
 ---
 
-*(Add future entries above this line: OPS-003, OPS-004, ...)*
+## OPS-003 — "Network split-brain" that was actually a wiped GeoServer config
+
+**Date:** 2026-07-11 · **Severity:** GeoServer WFS unreachable from QGIS/curl/Python · **See:** interop matrix row 2
+
+**Symptom.** QGIS WFS failed with an empty "server replied:". curl and
+Python on 127.0.0.1 got bare 404s with a banner-obfuscated Tomcat page
+("i_am_a_teapot"). The browser had loaded GetCapabilities fine — earlier.
+
+**Wrong turns taken (preserved on purpose).**
+1. Suspected localhost-vs-127.0.0.1 resolution. Wrong, but the test was right.
+2. Suspected proxies. getproxies() == {} killed that cleanly.
+3. netstat showed IPv4 and IPv6 loopback listeners with different PIDs and
+   built a "split-brain between Docker's two port proxies" theory. Both
+   PIDs turned out to be Docker's own components (com.docker.backend and
+   wslrelay) doing their normal jobs.
+4. Moved GeoServer to port 8085. Reasonable hygiene, didn't fix it.
+
+**Actual root cause (found in 30 seconds of docker logs).**
+`WARN [servlet.PageNotFound] - No mapping for GET /geoserver/public/ows` —
+GeoServer had no workspace named `public`. The admin-UI configuration had
+been wiped: the persistence volume was added to compose earlier, but the
+container wasn't recreated until later (the port change), at which point
+the empty volume mounted over the config. The browser's earlier success ran
+against the old container before recreation. A workspace-qualified URL for
+a nonexistent workspace returns a Tomcat-level 404 (the osgeo image ships a
+banner-hardened Tomcat, hence the teapot).
+
+**Fix.** Re-created workspace/store/layers once; config now persists in the
+geoserver_data volume (verified across `docker compose restart geoserver`).
+Full capabilities confirmed over plain IPv4 afterward.
+
+**Standing rules.**
+- `docker logs <container>` is debugging step ONE for any service 404 —
+  the server tells you what it received and what it thinks is missing.
+  We theorized about the network for an hour; the answer was one log line.
+- Compose file changes do nothing until the container is recreated; the
+  recreation happens on the NEXT `up -d`, possibly much later. Know when
+  your config changes actually take effect.
+- An error page in the wrong flavor (bare Tomcat 404 from a GeoServer URL)
+  means the request didn't reach the application layer you expected —
+  in this case GeoServer's dispatcher rejecting an unknown workspace.
+- Timing matters in diagnosis: "the browser worked" was evidence from
+  BEFORE the state change. Re-verify old evidence after anything restarts.
+
+---
+
+*(Add future entries above this line: OPS-004, OPS-005, ...)*

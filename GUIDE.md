@@ -39,7 +39,7 @@ Verify each tier and understand what you're looking at:
 3. **Outage map**: http://localhost:8088 — feeders by voltage class, active
    outages sized by customers affected. Click an outage: cause category and
    banded count, nothing sensitive.
-4. **GeoServer**: http://localhost:8080/geoserver (admin/geoserver) — Phase 5.
+4. **GeoServer**: http://localhost:8085/geoserver (admin/geoserver) — Phase 5.
 
 **Document:** screenshot the map and the Martin catalog; a paragraph per
 container in a devlog.

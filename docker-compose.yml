@@ -40,7 +40,7 @@ services:
     volumes:
       - geoserver_data:/opt/geoserver_data   # without this, `compose down` erases all admin-UI config (workspaces, stores, layers)
     ports:
-      - "8080:8080"
+      - "8085:8080"   # host 8085: another local service squats 0.0.0.0:8080 (see OPS-003)
     depends_on:
       postgis:
         condition: service_healthy

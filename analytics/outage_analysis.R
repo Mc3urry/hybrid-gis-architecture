@@ -73,7 +73,7 @@ cat("wrote cause_summary.csv and outage_map.png\n")
 # --- Alternative access path: pure OGC, no database credentials at all ------
 # Once GeoServer publishes the public views as WFS (GUIDE Phase 5), an
 # external analyst needs NO database access -- the standards bridge serves R:
-#   outages <- st_read(paste0("WFS:http://localhost:8080/geoserver/ows?",
+#   outages <- st_read(paste0("WFS:http://127.0.0.1:8085/geoserver/public/ows?",
 #                             "service=WFS&request=GetFeature&",
 #                             "typeName=public:outages_public"))
 # Same data, boundary enforced, zero credentials shared. That contrast --

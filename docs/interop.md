@@ -6,10 +6,10 @@ directions. Same data, multiple standards, multiple clients.
 | # | Producer | Standard/API | Consumer | Status | Notes |
 |---|----------|--------------|----------|--------|-------|
 | 1 | GeoServer (PostGIS views) | WFS 2.0 / GeoJSON | Browser (raw request) | ☑ done | GetFeature on public:outages_public returns boundary-filtered GeoJSON |
-| 2 | GeoServer | WFS 2.0 | QGIS | ☐ | |
+| 2 | GeoServer | WFS 2.0 | QGIS | ☑ done | See img/interop-qgis.png; required OPS-003 resolution first |
 | 3 | GeoServer | WFS 2.0 | ArcGIS Pro | ☐ | Esri client consuming open-source services — the money screenshot |
 | 4 | AGOL hosted view | ArcGIS REST / GeoJSON | sync_from_sor.py | ☑ done | The Phase 3 pipeline (see ADR-004 observed consequences) |
-| 5 | AGOL hosted view | ArcGIS REST | QGIS | ☐ | |
+| 5 | AGOL hosted view | ArcGIS REST | QGIS | ☑ done | Same project as row 2 — both stacks in one map; ADR-005 grid-snap offset visible between AGOL source points and public-view points |
 | 6 | ArcGIS Enterprise | WMS / OGC API - Features | QGIS + MapLibre | ☐ blocked | Awaiting Phase 4 (UTD license) |
 | 7 | Martin (PostGIS views) | Vector tiles (MVT) | MapLibre | ☑ done | The public map itself |
 
@@ -24,7 +24,17 @@ directions. Same data, multiple standards, multiple clients.
 - Both layers published with declared SRS EPSG:4326, bounds computed from data.
 - Verified: Layer Preview (OpenLayers) + raw WFS GetFeature as GeoJSON.
 
-## Part 2 — QGIS (next)
+## Part 2 — QGIS (done)
 
-Add WFS connection: http://localhost:8080/geoserver/public/ows
-Add AGOL view via ArcGIS REST Server connection. Screenshot both in one project.
+One QGIS project consuming both stacks simultaneously:
+
+![QGIS consuming both stacks](img/interop-qgis.png)
+
+- GeoServer WFS: feeders_public + outages_public (connection: http://127.0.0.1:8085/geoserver/public/ows, version 2.0)
+- AGOL REST: outages_sor_public_view, anonymous — no credentials configured, proving the public boundary serves external standards clients
+- Visible detail: AGOL points sit slightly offset from their public-view counterparts — the ~200 m ST_SnapToGrid location fuzz from ADR-005, observable in the map
+
+## Part 3 — ArcGIS Pro (next)
+
+Insert -> Connections -> Server -> New WFS Server -> http://127.0.0.1:8085/geoserver/public/ows
+Add both layers from the Catalog pane. Screenshot = row 3, the Esri-client-on-open-services proof.

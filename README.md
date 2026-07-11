@@ -49,7 +49,7 @@ hybrid-gis-architecture/
 docker compose up -d
 # PostGIS   -> localhost:5432  (gis / gis_dev_password, db: public_gis)
 # Martin    -> http://localhost:3000       (tile catalog: /catalog)
-# GeoServer -> http://localhost:8080/geoserver  (admin / geoserver)
+# GeoServer -> http://localhost:8085/geoserver  (admin / geoserver)
 # Keycloak  -> http://localhost:8081       (admin / admin_dev_password)
 # Outage map-> http://localhost:8088
 ```
