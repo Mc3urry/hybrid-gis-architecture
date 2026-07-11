@@ -37,6 +37,8 @@ services:
     container_name: hybrid-geoserver
     environment:
       SKIP_DEMO_DATA: "true"
+    volumes:
+      - geoserver_data:/opt/geoserver_data   # without this, `compose down` erases all admin-UI config (workspaces, stores, layers)
     ports:
       - "8080:8080"
     depends_on:
@@ -67,3 +69,4 @@ services:
 
 volumes:
   pgdata:
+  geoserver_data:

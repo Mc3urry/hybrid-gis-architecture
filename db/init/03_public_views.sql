@@ -50,3 +50,8 @@ CREATE INDEX outages_public_gix ON public.outages_public USING gist (geom);
 CREATE ROLE tile_reader NOLOGIN;
 GRANT USAGE ON SCHEMA public TO tile_reader;
 GRANT SELECT ON public.feeders_public, public.outages_public TO tile_reader;
+
+-- Service login for GeoServer: inherits ONLY tile_reader. When GeoServer's
+-- store connects as this user it can see the two public views and nothing
+-- else -- the layer-publish screen itself demonstrates the boundary.
+CREATE ROLE svc_geoserver LOGIN PASSWORD 'svc_dev_password' IN ROLE tile_reader;
