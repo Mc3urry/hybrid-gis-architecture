@@ -142,4 +142,43 @@ afterward; working tree unaffected.
 
 ---
 
-*(Add future entries above this line: OPS-005, OPS-006, ...)*
+## OPS-005 — Martin served the entire database: tile server connected as superuser
+
+**Date:** 2026-07-11 · **Severity:** trust-boundary breach in the reference deployment (PII/CEII layers exposed as public tiles) · **Found by:** Phase 7 evidence review
+
+**Symptom.** A screenshot of the Kubernetes Martin's /catalog, taken as
+scaling evidence, listed EIGHT tile sources — including sor.devices,
+sor.service_points, and raw sor.outages. Vector tiles carry all columns as
+feature properties, so customer names, account numbers, and crew notes were
+being served by the public tile tier. The Compose deployment had the
+identical defect since first boot.
+
+![Martin catalog exposing sor.* layers](img/ops005-martin-catalog-leak.png)
+
+**Root cause.** ADR-005 stated that tile servers connect as tile_reader,
+but Martin's DATABASE_URL in both docker-compose.yml and k8s/martin.yaml
+connected as the gis superuser. Martin auto-discovers everything its role
+can read (its best feature — see ADR-003/ADR-008 — and again its sharpest
+edge). The routine "catalog check" verified the two public views were
+PRESENT but never that they were the ONLY entries: the verification tested
+for absence of failure, not presence of the boundary.
+
+**Fix.** New svc_martin login inheriting only tile_reader (03_public_views.sql);
+both deployment manifests repointed; CI gained a negative test asserting
+the tile role cannot read sor.* (a positive-capability test alone would not
+have caught this). Existing databases require the role added manually or a
+volume re-init.
+
+**Standing rules.**
+- Every service connects as a role scoped to what it should serve; the
+  superuser connection string is never copy-pasted into a new component.
+- Boundary verification must be exhaustive, not existential: check what is
+  exposed IN TOTAL, not merely that the intended items exist.
+- Security regression tests must include negative cases — assert the
+  forbidden action fails, not only that the permitted action succeeds.
+- Evidence screenshots are audits: reviewing them closely is how this was
+  caught at all.
+
+---
+
+*(Add future entries above this line: OPS-006, OPS-007, ...)*

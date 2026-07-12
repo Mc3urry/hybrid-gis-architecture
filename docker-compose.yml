@@ -24,7 +24,8 @@ services:
     image: ghcr.io/maplibre/martin:v0.14.2
     container_name: hybrid-martin
     environment:
-      DATABASE_URL: postgresql://gis:gis_dev_password@postgis:5432/public_gis
+      # svc_martin, NOT gis: Martin serves everything its role can see (OPS-005)
+      DATABASE_URL: postgresql://svc_martin:svc_dev_password@postgis:5432/public_gis
     depends_on:
       postgis:
         condition: service_healthy

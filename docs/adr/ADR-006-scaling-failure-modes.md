@@ -41,6 +41,14 @@ large demand multiple and the consequences of that failure.
   container recreation because it had no volume (OPS-003) — state needs a
   home just like data does. The same lesson will apply to Portal's content
   directory and Server's config store in Phase 4.
+- The horizontal-scaling claim was demonstrated on Kubernetes (Docker
+  Desktop): the Martin Deployment scaled 3 -> 5 replicas in seconds via a
+  single declarative command, and a manually deleted pod was replaced
+  automatically to restore the declared state (see
+  ../img/k8s-martin-scale.png). The same exercise surfaced OPS-005 — the
+  scaling demo's evidence screenshot revealed the tile tier's
+  over-privileged database connection — reinforcing that operational
+  exercises double as audits.
 - Local dev adds its own failure modes worth separating from architecture:
   dual-stack loopback confusion and cloud-sync git corruption
   (OPS-003/OPS-004) were environment problems, not design problems — but an

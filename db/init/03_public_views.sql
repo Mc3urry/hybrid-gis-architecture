@@ -55,3 +55,9 @@ GRANT SELECT ON public.feeders_public, public.outages_public TO tile_reader;
 -- store connects as this user it can see the two public views and nothing
 -- else -- the layer-publish screen itself demonstrates the boundary.
 CREATE ROLE svc_geoserver LOGIN PASSWORD 'svc_dev_password' IN ROLE tile_reader;
+
+-- Service login for Martin. Martin auto-discovers EVERY table its connection
+-- role can read; connected as a superuser it will happily serve sor.* --
+-- customer PII included -- as public vector tiles (OPS-005). The restricted
+-- role makes the catalog itself enforce the boundary.
+CREATE ROLE svc_martin LOGIN PASSWORD 'svc_dev_password' IN ROLE tile_reader;

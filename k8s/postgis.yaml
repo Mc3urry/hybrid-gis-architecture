@@ -30,6 +30,11 @@ spec:
             - { name: POSTGRES_DB, value: public_gis }
           volumeMounts:
             - { name: pgdata, mountPath: /var/lib/postgresql/data }
+            - { name: db-init, mountPath: /docker-entrypoint-initdb.d, readOnly: true }
+      volumes:
+        - name: db-init
+          configMap:
+            name: db-init   # create first: kubectl create configmap db-init --from-file=db/init/
   volumeClaimTemplates:
     - metadata: { name: pgdata }
       spec:

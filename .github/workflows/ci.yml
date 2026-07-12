@@ -78,6 +78,14 @@ jobs:
               ), 'sensitive column leaked into a public view';
             END \$\$;"
 
+      - name: "OPS-005 regression: tile-serving role cannot read the sor schema"
+        run: |
+          if psql -h localhost -U gis -d public_gis -c "SET ROLE svc_martin; SELECT count(*) FROM sor.outages;" 2>/dev/null; then
+            echo "BOUNDARY BREACH: svc_martin can read sor.*"; exit 1
+          fi
+          psql -h localhost -U gis -d public_gis -v ON_ERROR_STOP=1 -c \
+            "SET ROLE svc_martin; SELECT count(*) FROM public.outages_public;"
+
       - name: Run the sync end-to-end (simulate mode)
         run: |
           pip install -q psycopg2-binary requests
