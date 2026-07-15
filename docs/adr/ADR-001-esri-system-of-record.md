@@ -21,11 +21,11 @@ data. All editing and tracing happens there. Nothing edits PostGIS directly.
 ## Observed consequences (post-implementation)
 - AGOL currently stands in as the system of record; because the decision was
   made at the service-contract level, swapping to Enterprise is a one-URL
-  change in the sync — verified in Phase 3 when the same script consumed a
+  change in the sync — verified when the same script consumed a
   hosted view with zero code changes beyond a field-name fallback.
 - The contract is field names as much as endpoints: a singular/plural naming
   drift produced silent NULLs (OPS-002). "System of record" includes its
   schema discipline, not just its location.
 - The Utility Network-specific claims of this ADR (versioned editing,
-  tracing) remain projected until the Phase 4 Enterprise deployment; noted
+  tracing) remain projected until the ArcGIS Enterprise deployment; noted
   here for honesty rather than assumed.

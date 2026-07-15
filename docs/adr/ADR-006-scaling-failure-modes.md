@@ -40,7 +40,7 @@ large demand multiple and the consequences of that failure.
   CONFIGURATION IS STATE. GeoServer's admin-UI config was lost to a
   container recreation because it had no volume (OPS-003) — state needs a
   home just like data does. The same lesson will apply to Portal's content
-  directory and Server's config store in Phase 4.
+  directory and Server's configuration store in the Enterprise deployment.
 - The horizontal-scaling claim was demonstrated on Kubernetes (Docker
   Desktop): the Martin Deployment scaled 3 -> 5 replicas in seconds via a
   single declarative command, and a manually deleted pod was replaced

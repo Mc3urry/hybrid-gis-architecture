@@ -8,9 +8,9 @@ directions. Same data, multiple standards, multiple clients.
 | 1 | GeoServer (PostGIS views) | WFS 2.0 / GeoJSON | Browser (raw request) | ☑ done | GetFeature on public:outages_public returns boundary-filtered GeoJSON |
 | 2 | GeoServer | WFS 2.0 | QGIS | ☑ done | See img/interop-qgis.png; required OPS-003 resolution first |
 | 3 | GeoServer | WFS 2.0 | ArcGIS Pro | ☑ done | Esri's flagship client rendering the open-source stack; banded values visible in Pro's popup; no axis-order issues at WFS 2.0 |
-| 4 | AGOL hosted view | ArcGIS REST / GeoJSON | sync_from_sor.py | ☑ done | The Phase 3 pipeline (see ADR-004 observed consequences) |
+| 4 | AGOL hosted view | ArcGIS REST / GeoJSON | sync_from_sor.py | ☑ done | The scheduled sync pipeline (see ADR-004, observed consequences) |
 | 5 | AGOL hosted view | ArcGIS REST | QGIS | ☑ done | Same project as row 2 — both stacks in one map; ADR-005 grid-snap offset visible between AGOL source points and public-view points |
-| 6 | ArcGIS Enterprise | WMS / OGC API - Features | QGIS + MapLibre | ☐ blocked | Awaiting Phase 4 (UTD license) |
+| 6 | ArcGIS Enterprise | WMS / OGC API - Features | QGIS + MapLibre | ☐ pending | Pending the ArcGIS Enterprise deployment (docs/enterprise-deployment.md) |
 | 7 | Martin (PostGIS views) | Vector tiles (MVT) | MapLibre | ☑ done | The public map itself |
 
 ## Part 1 — GeoServer publishing (done)
@@ -51,4 +51,4 @@ Esri-client-on-open-services proof:
 - Notably clean: no EPSG:4326 axis-order flip between GeoServer and Pro at
   WFS 2.0 — the classic OGC interop fight did not materialize here
 
-**Matrix status: 6 of 7 — row 6 (ArcGIS Enterprise) awaits the Phase 4 license.**
+**Matrix status: 6 of 7 — row 6 pends the ArcGIS Enterprise deployment.**

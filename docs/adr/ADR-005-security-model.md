@@ -41,8 +41,8 @@ unreachable for that role.
 **Correction (OPS-005).** As originally deployed, this ADR's claim that
 tile servers connect as tile_reader was implemented for GeoServer but not
 for Martin, which connected as the superuser and consequently served the
-entire sor schema as public tiles. The defect was found during Phase 7
-evidence review and corrected: a dedicated svc_martin login now inherits
+entire sor schema as public tiles. The defect was found during a
+review of Kubernetes scaling evidence and corrected: a dedicated svc_martin login now inherits
 only tile_reader, and CI enforces the boundary with a negative test. The
 episode is documented in full in ../operations.md (OPS-005); its lesson —
 verification must be exhaustive rather than existential — has been added

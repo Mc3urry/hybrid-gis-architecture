@@ -76,10 +76,12 @@ feeders colored by voltage class, active outages sized by customers affected.
 - **The analyst persona:** R reading the same PostGIS the tile servers use —
   [analytics-outage-map](docs/img/analytics-outage-map.png).
 
-## The one-sentence pitch
+## Design thesis
 
-> "I architect on ArcGIS Enterprise, and I know when and how to bridge to
-> open-source to solve problems Esri alone can't — or shouldn't — solve."
+> The licensed platform serves the workload it is priced for — bounded,
+> internal, editorial. The open-source tier serves the workload it is built
+> for — anonymous, read-only, elastic. Open standards form the only contract
+> between them, so either side remains replaceable.
 
 Dev credentials are intentionally trivial; this is a reference design, not a
 hardened deployment. See ADR-005 for the security model.

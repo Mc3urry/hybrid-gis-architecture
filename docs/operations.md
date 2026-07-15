@@ -144,7 +144,7 @@ afterward; working tree unaffected.
 
 ## OPS-005 — Martin served the entire database: tile server connected as superuser
 
-**Date:** 2026-07-11 · **Severity:** trust-boundary breach in the reference deployment (PII/CEII layers exposed as public tiles) · **Found by:** Phase 7 evidence review
+**Date:** 2026-07-11 · **Severity:** trust-boundary breach in the reference deployment (PII/CEII layers exposed as public tiles) · **Found by:** review of Kubernetes scaling evidence
 
 **Symptom.** A screenshot of the Kubernetes Martin's /catalog, taken as
 scaling evidence, listed EIGHT tile sources — including sor.devices,

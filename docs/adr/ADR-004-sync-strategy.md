@@ -25,7 +25,7 @@ Option (b) is the documented evolution path when a real OMS integration exists.
 - Full-table paging is O(n); move to editedDate-filtered incremental pulls as
   outage volume grows.
 
-## Observed consequences (post-implementation, Phase 3 / AGOL)
+## Observed consequences (post-implementation, ArcGIS Online integration)
 - The sync deliberately reads a public *view* of the source layer, not the
   source itself: the pipeline is an anonymous consumer and never holds
   credentials or sees behind the boundary. crew_notes was verified absent
