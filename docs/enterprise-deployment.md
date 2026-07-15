@@ -19,21 +19,37 @@ architecture works (ADR-004).
 | docker-compose.yml | ArcGIS Enterprise Builder / installers + federation | No container equivalent in a base deployment — this is why the deployment doc you'll write has real value. |
 | sync_from_sor.py | **Unchanged.** | The REST /query contract is identical between AGOL and Enterprise. |
 
-## 2. Get licensed (verify current terms before committing)
+## 2. Licensing (resolved)
 
-In order of preference: Esri Developer program tiers (some include Enterprise)
-→ UT Dallas site license (ask the department — many universities carry
-Enterprise entitlements) → official trial on a time-boxed cloud VM
-(snapshot it; document fast).
+Licensing was obtained through the university's Esri education site license:
+an academic-use ArcGIS Server authorization (ECP number, entered directly in
+the Software Authorization Wizard during installation) at version 12.1,
+valid through the license year. Portal for ArcGIS requires its own license
+file (a .json with named-user counts) generated from the licensing portal;
+ArcGIS Data Store and the Web Adaptor are licensed through Server and
+require no separate authorization. Installer access is through My Esri and
+requires the account to be connected to the organization by its
+administrator. Authorization numbers are credentials and are recorded only
+in private notes, never in this repository.
 
 ## 3. Provision the machine
 
-Single-machine base deployment is normal and interview-defensible (ADR it):
-- Windows Server 2022 (or RHEL), 8 vCPU, 32 GB RAM, 250 GB disk.
-- A resolvable FQDN (hosts-file hacks cause cert pain later; a cheap domain +
-  DNS record is worth it).
-- Open ports: 6443 (Server), 7443 (Portal), 2443 (Data Store), 443 (Web
-  Adaptor/IIS). Internal-only except 443.
+Single-machine base deployment is normal and interview-defensible (ADR it).
+Reference specification: Windows Server 2022 (or RHEL), 8 vCPU, 32 GB RAM,
+250 GB disk, a resolvable FQDN, and ports 6443 (Server), 7443 (Portal), and
+2443 (Data Store) open internally with 443 exposed via the Web Adaptor.
+
+This deployment deliberately deviates from the reference, and the deviations
+are themselves documented decisions:
+- Windows 11 workstation, 16 GB RAM — supported by Esri for basic testing
+  and development use at 12.1. The memory constraint imposes an operating
+  discipline: Docker Desktop is fully quit (and WSL capped at 3 GB via
+  .wslconfig) during Enterprise sessions; components are installed and
+  verified serially; ArcGIS Pro and the full Enterprise stack are not run
+  simultaneously except during publishing.
+- The machine hostname is used in place of an FQDN, with self-signed
+  certificates accepted for development. The hostname must contain no
+  underscore and must not change after installation.
 
 ## 4. Installation and Federation Order
 
@@ -46,12 +62,16 @@ manually once; the manual path is what you're learning:
    against the Server. Verify: https://FQDN:2443/arcgis/datastore
 3. **Portal for ArcGIS** — install, authorize, create the initial admin.
    Verify: https://FQDN:7443/arcgis/home
-4. **Web Adaptor** ×2 (IIS) — one for Portal (`/portal`), one for Server
-   (`/server`). TLS cert on IIS first (Let's Encrypt is fine).
+4. **Web Adaptor** — deliberately deferred in this deployment. The Web
+   Adaptor exists to place all components behind IIS on port 443; for a
+   development deployment the components' native ports (6443/7443) are used
+   directly, which removes IIS and most certificate friction from the
+   critical path. Adding the Web Adaptor later is documented as its own
+   exercise.
 5. **Federate** — Portal admin → Organization → Servers → Add Server, then
    designate it the **hosting server**. This is the step where everything
    that's going to go wrong goes wrong (certs, FQDN mismatches, admin URLs).
-   Log every error in operations.md — OPS-002 onward starts here.
+   Log every error in operations.md — OPS-006 onward starts here.
 
 ## 5. Data tier: two stores, two jobs
 
@@ -79,7 +99,7 @@ what Phase 5's interop matrix consumes from the Esri side.
 ## 7. Swap it into the hybrid
 
 ```bash
-python sync_from_sor.py --service-url https://FQDN/server/rest/services/Outages/FeatureServer/0
+python sync_from_sor.py --service-url https://<hostname>:6443/arcgis/rest/services/Outages/FeatureServer/0
 ```
 
 Nothing else changes: same upserts, same matview refresh, same tiles, same
