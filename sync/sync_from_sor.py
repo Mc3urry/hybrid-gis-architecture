@@ -60,10 +60,11 @@ INSERT INTO sor.feeders (feeder_id, substation_id, voltage_class, phase,
 VALUES (%s, %s, %s, %s, %s, now(),
         ST_SetSRID(ST_GeomFromGeoJSON(%s), 4326))
 ON CONFLICT (feeder_id) DO UPDATE SET
-    substation_id    = EXCLUDED.substation_id,
-    voltage_class    = EXCLUDED.voltage_class,
-    phase            = EXCLUDED.phase,
-    customers_served = EXCLUDED.customers_served,
+    substation_id    = COALESCE(EXCLUDED.substation_id, sor.feeders.substation_id),
+    voltage_class    = COALESCE(EXCLUDED.voltage_class, sor.feeders.voltage_class),
+    phase            = COALESCE(EXCLUDED.phase, sor.feeders.phase),
+    -- feed may omit sensitive fields (view-based sync); NULLs preserve local values
+    customers_served = COALESCE(EXCLUDED.customers_served, sor.feeders.customers_served),
     last_edited      = now(),
     geom             = EXCLUDED.geom;
 """
@@ -117,8 +118,26 @@ def simulate(cur):
     return restored + cur.rowcount
 
 
+def esri_geometry_to_geojson(g):
+    """Convert Esri JSON geometry to GeoJSON. Not every ArcGIS layer serves
+    f=geojson, but every layer serves Esri JSON — so the sync requests the
+    universal format and converts (found the hard way; see operations.md)."""
+    if g is None:
+        return None
+    if "x" in g:
+        return {"type": "Point", "coordinates": [g["x"], g["y"]]}
+    if "paths" in g:
+        paths = g["paths"]
+        if len(paths) == 1:
+            return {"type": "LineString", "coordinates": paths[0]}
+        return {"type": "MultiLineString", "coordinates": paths}
+    if "rings" in g:
+        return {"type": "Polygon", "coordinates": g["rings"]}
+    raise ValueError(f"unsupported esri geometry: {list(g)}")
+
+
 def pull_feeders(cur, service_url):
-    """Page through an ArcGIS REST feeders layer as GeoJSON and upsert."""
+    """Page through an ArcGIS REST feeders layer (Esri JSON) and upsert."""
     rows, offset, page = 0, 0, 1000
     while True:
         r = requests.get(
@@ -126,18 +145,23 @@ def pull_feeders(cur, service_url):
             params={
                 "where": "1=1",
                 "outFields": "*",
-                "f": "geojson",
+                "outSR": 4326,
+                "f": "json",
                 "resultOffset": offset,
                 "resultRecordCount": page,
             },
             timeout=60,
         )
         r.raise_for_status()
-        features = r.json().get("features", [])
+        body = r.json()
+        if "error" in body:
+            raise RuntimeError(f"service error: {body['error']}")
+        features = body.get("features", [])
         if not features:
             break
         for f in features:
-            p = f.get("properties", {})
+            p = f.get("attributes", {})
+            geom = esri_geometry_to_geojson(f.get("geometry"))
             cur.execute(
                 UPSERT_FEEDER,
                 (
@@ -146,7 +170,7 @@ def pull_feeders(cur, service_url):
                     p.get("voltage_class") or p.get("VOLTAGE_CLASS"),
                     p.get("phase") or p.get("PHASE"),
                     p.get("customers_served") or p.get("CUSTOMERS_SERVED"),
-                    json.dumps(f["geometry"]),
+                    json.dumps(geom),
                 ),
             )
             rows += 1
