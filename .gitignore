@@ -10,6 +10,9 @@ __pycache__/
 analytics/*.csv
 analytics/*.png
 
+# Data export artifacts
+sync/export/
+
 # Local env / secrets
 .env
 

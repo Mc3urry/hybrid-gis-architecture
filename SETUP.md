@@ -55,7 +55,17 @@ minutes-cadence — the two-cadence design is documented in ADR-004.
 
 The sync consumes any ArcGIS feature service layer over REST — AGOL and
 Enterprise expose the identical contract (that equivalence is the point of
-the service-layer boundary, ADR-004):
+the service-layer boundary, ADR-004). The system of record comprises the
+network layers (slow-changing) and the outage layer (fast-changing); the
+two sync at different cadences:
+
+0. To publish the full network as the system of record, run
+   `python export_network.py` (writes GeoJSON per layer to `sync/export/`),
+   upload each file as a hosted feature layer, and share them
+   organization-internal only — the network layers contain the fields the
+   trust boundary exists to protect. The slow-cadence sync then runs as
+   `python sync_from_sor.py --network-url ".../feeders/FeatureServer/0"`
+   on a daily or weekly schedule.
 
 1. Publish a hosted point layer with fields matching `sor.outages`
    (outage_id, feeder_id, status, cause_category, customers_affected,

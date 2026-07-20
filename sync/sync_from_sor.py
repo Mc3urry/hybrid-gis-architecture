@@ -13,6 +13,10 @@ Modes:
   --service-url URL     pull outages from a real ArcGIS feature service layer
                         (Enterprise or AGOL stand-in) via REST and upsert.
                         URL is the layer endpoint, e.g. .../FeatureServer/0
+  --network-url URL     the slow-cadence leg (ADR-004): pull FEEDERS from an
+                        ArcGIS feature service layer and upsert network
+                        geometry. Run daily/weekly, in contrast to the
+                        minutes-cadence outage sync.
 
 Either way, the run finishes with REFRESH MATERIALIZED VIEW CONCURRENTLY so the
 public outage map updates with zero read downtime. Every run is logged to
@@ -47,6 +51,21 @@ ON CONFLICT (outage_id) DO UPDATE SET
     est_restoration    = EXCLUDED.est_restoration,
     customers_affected = EXCLUDED.customers_affected,
     geom               = EXCLUDED.geom;
+"""
+
+
+UPSERT_FEEDER = """
+INSERT INTO sor.feeders (feeder_id, substation_id, voltage_class, phase,
+                         customers_served, last_edited, geom)
+VALUES (%s, %s, %s, %s, %s, now(),
+        ST_SetSRID(ST_GeomFromGeoJSON(%s), 4326))
+ON CONFLICT (feeder_id) DO UPDATE SET
+    substation_id    = EXCLUDED.substation_id,
+    voltage_class    = EXCLUDED.voltage_class,
+    phase            = EXCLUDED.phase,
+    customers_served = EXCLUDED.customers_served,
+    last_edited      = now(),
+    geom             = EXCLUDED.geom;
 """
 
 
@@ -98,6 +117,43 @@ def simulate(cur):
     return restored + cur.rowcount
 
 
+def pull_feeders(cur, service_url):
+    """Page through an ArcGIS REST feeders layer as GeoJSON and upsert."""
+    rows, offset, page = 0, 0, 1000
+    while True:
+        r = requests.get(
+            f"{service_url.rstrip('/')}/query",
+            params={
+                "where": "1=1",
+                "outFields": "*",
+                "f": "geojson",
+                "resultOffset": offset,
+                "resultRecordCount": page,
+            },
+            timeout=60,
+        )
+        r.raise_for_status()
+        features = r.json().get("features", [])
+        if not features:
+            break
+        for f in features:
+            p = f.get("properties", {})
+            cur.execute(
+                UPSERT_FEEDER,
+                (
+                    str(p.get("feeder_id") or p.get("FEEDER_ID")),
+                    p.get("substation_id") or p.get("SUBSTATION_ID"),
+                    p.get("voltage_class") or p.get("VOLTAGE_CLASS"),
+                    p.get("phase") or p.get("PHASE"),
+                    p.get("customers_served") or p.get("CUSTOMERS_SERVED"),
+                    json.dumps(f["geometry"]),
+                ),
+            )
+            rows += 1
+        offset += page
+    return rows
+
+
 def pull_arcgis(cur, service_url):
     """Page through an ArcGIS REST feature layer as GeoJSON and upsert outages."""
     rows, offset, page = 0, 0, 1000
@@ -142,20 +198,27 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--simulate", action="store_true")
     ap.add_argument("--service-url")
+    ap.add_argument("--network-url")
     args = ap.parse_args()
-    if not args.service_url:
+    if not args.service_url and not args.network_url:
         args.simulate = True
 
-    source = args.service_url or "simulate"
+    source = args.network_url or args.service_url or "simulate"
     conn = psycopg2.connect(DSN)
     conn.autocommit = True
     cur = conn.cursor()
     run_id = log_start(cur, source)
     try:
-        rows = simulate(cur) if args.simulate else pull_arcgis(cur, args.service_url)
+        if args.network_url:
+            rows = pull_feeders(cur, args.network_url)
+            kind = "feeder"
+        elif args.simulate:
+            rows, kind = simulate(cur), "outage"
+        else:
+            rows, kind = pull_arcgis(cur, args.service_url), "outage"
         refresh(cur)
         log_finish(cur, run_id, rows)
-        print(f"run {run_id}: {rows} outage rows changed from {source}; public views refreshed")
+        print(f"run {run_id}: {rows} {kind} rows changed from {source}; public views refreshed")
     except Exception as e:
         log_finish(cur, run_id, 0, status=f"error: {e}")
         print(f"run {run_id} FAILED: {e}", file=sys.stderr)
