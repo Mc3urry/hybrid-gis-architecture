@@ -42,3 +42,26 @@ Option (b) is the documented evolution path when a real OMS integration exists.
   the upsert's lookups (lowercase here), and FK integrity (feeder_id must
   exist in sor.feeders) means upstream data quality failures surface as sync
   errors in sor.sync_log — which is where you want them.
+
+## Observed consequences (post-implementation, network leg)
+The two-cadence design was completed by implementing the slow leg
+(--network-url): feeders sync from an ArcGIS feature service on a
+daily/weekly cadence while outages sync on a minutes cadence, exactly as
+the decision specified. Bringing it up surfaced three REST-contract details
+that are now part of the pull implementation:
+- GeoJSON output is not universal. The outage leg used f=geojson, but the
+  feeders layer returned HTTP 400 for that format. The network leg requests
+  Esri JSON (f=json) — which every ArcGIS layer serves — and converts the
+  geometry client-side, making the sync robust to layers that do not
+  advertise geoJSON.
+- Spatial reference must be requested explicitly. Hosted layers store
+  coordinates in Web Mercator; the request specifies outSR=4326 so geometry
+  arrives in the CRS the schema expects. Omitting it would have placed
+  features far outside the study area.
+- The pipeline is a redacted-view consumer, not a full-data consumer.
+  Because the sync reads a public (or public-safe) projection rather than
+  the authoritative record, a field the view omits arrives as NULL. The
+  upsert therefore uses COALESCE(EXCLUDED.col, existing.col) so a partial
+  feed preserves locally held values instead of erasing them — the same
+  boundary that protects the public tier also constrains the pipeline, and
+  the COALESCE pattern is its mitigation.

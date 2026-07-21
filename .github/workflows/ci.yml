@@ -86,6 +86,20 @@ jobs:
           psql -h localhost -U gis -d public_gis -v ON_ERROR_STOP=1 -c \
             "SET ROLE svc_martin; SELECT count(*) FROM public.outages_public;"
 
+      - name: "Unit: Esri-JSON -> GeoJSON geometry conversion"
+        run: |
+          python - <<'PY'
+          import sys
+          sys.path.insert(0, "sync")
+          from sync_from_sor import esri_geometry_to_geojson as c
+          assert c({"x": -96.8, "y": 32.8}) == {"type": "Point", "coordinates": [-96.8, 32.8]}
+          assert c({"paths": [[[0,0],[1,1]]]}) == {"type": "LineString", "coordinates": [[0,0],[1,1]]}
+          assert c({"paths": [[[0,0]], [[1,1]]]})["type"] == "MultiLineString"
+          assert c({"rings": [[[0,0],[1,0],[1,1],[0,0]]]})["type"] == "Polygon"
+          assert c(None) is None
+          print("geometry conversion: ok")
+          PY
+
       - name: Run the sync end-to-end (simulate mode)
         run: |
           pip install -q psycopg2-binary requests

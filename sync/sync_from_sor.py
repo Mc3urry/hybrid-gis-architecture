@@ -31,8 +31,9 @@ import json
 import os
 import sys
 
-import psycopg2
-import requests
+# psycopg2 and requests are imported lazily inside the functions that use
+# them, so pure helpers (e.g. the geometry converter) remain importable in
+# environments without the database driver installed — e.g. the CI unit test.
 
 DSN = os.environ.get(
     "PUBLIC_GIS_DSN",
@@ -138,6 +139,7 @@ def esri_geometry_to_geojson(g):
 
 def pull_feeders(cur, service_url):
     """Page through an ArcGIS REST feeders layer (Esri JSON) and upsert."""
+    import requests
     rows, offset, page = 0, 0, 1000
     while True:
         r = requests.get(
@@ -180,6 +182,7 @@ def pull_feeders(cur, service_url):
 
 def pull_arcgis(cur, service_url):
     """Page through an ArcGIS REST feature layer as GeoJSON and upsert outages."""
+    import requests
     rows, offset, page = 0, 0, 1000
     while True:
         r = requests.get(
@@ -228,6 +231,7 @@ def main():
         args.simulate = True
 
     source = args.network_url or args.service_url or "simulate"
+    import psycopg2
     conn = psycopg2.connect(DSN)
     conn.autocommit = True
     cur = conn.cursor()

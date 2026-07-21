@@ -35,7 +35,7 @@ hybrid-gis-architecture/
 ├── .github/workflows/      # CI: real PostGIS, init SQL, boundary + ADR-008 regression tests
 ├── analytics/              # R: the analyst persona consuming the same platform
 ├── db/init/                # schema, synthetic network, public-safe views (auto-run on first boot)
-├── sync/                   # utility network -> PostGIS sync script
+├── sync/                   # utility network -> PostGIS sync (outage + network legs) and export_network.py
 ├── web/                    # public MapLibre outage map
 ├── docs/
 │   ├── architecture.md     # system diagram, data flow, trust boundary
