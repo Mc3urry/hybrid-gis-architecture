@@ -45,7 +45,10 @@ Everything right of it is a derived, read-only, public-safe projection:
 ## Data flow
 
 1. Network editors maintain the Utility Network in the Enterprise geodatabase;
-   the OMS writes outage events.
+   the OMS writes outage events. Authorized operations staff monitor the
+   authoritative (unredacted) data through internal ArcGIS Dashboards —
+   crew notes and exact counts included — while the public sees only the
+   redacted projection (see docs/ops-dashboard-spec.md, ADR-005).
 2. `sync/sync_from_sor.py` runs on a minutes-cadence for outages (slow cadence
    for network geometry): pages the feature service REST API, upserts into
    `sor.*`, logs to `sor.sync_log`, refreshes both public views concurrently.

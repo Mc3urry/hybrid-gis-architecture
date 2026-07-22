@@ -58,6 +58,15 @@ that are now part of the pull implementation:
   coordinates in Web Mercator; the request specifies outSR=4326 so geometry
   arrives in the CRS the schema expects. Omitting it would have placed
   features far outside the study area.
+- The published schema is a contract in both NAME and TYPE, and every
+  consumer must verify it rather than assume it from the source-of-truth
+  schema. The ArcGIS Online publish diverged from the PostGIS design twice:
+  customer_affected was published singular (vs. the plural customers_affected)
+  and, more subtly, coerced to String though the source column is integer.
+  The former produced silent NULLs in the sync (OPS-002); the latter breaks
+  numeric aggregation until the value is cast (surfaced when an operations
+  dashboard could not sum the field). The sync, the analytics script, and the
+  dashboard each rediscovered the gap independently.
 - The pipeline is a redacted-view consumer, not a full-data consumer.
   Because the sync reads a public (or public-safe) projection rather than
   the authoritative record, a field the view omits arrives as NULL. The

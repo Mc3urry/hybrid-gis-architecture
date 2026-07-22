@@ -47,3 +47,23 @@ only tile_reader, and CI enforces the boundary with a negative test. The
 episode is documented in full in ../operations.md (OPS-005); its lesson —
 verification must be exhaustive rather than existential — has been added
 to the standing rules.
+
+## Evidence — application tier (post-implementation)
+
+The boundary is enforced not only at the data and serving tiers but at the
+consuming-application tier. An internal ArcGIS Dashboard reads the
+unredacted system-of-record layer and displays crew notes and exact customer
+counts to authorized (organization-only) staff:
+
+![Internal operations dashboard](../img/internal-ops-dashboard.png)
+
+The public view of the same outage (AGOL-003) omits crew notes entirely:
+
+![Public view of the same outage](../img/public-popup-same-outage.png)
+
+Same record, two audiences, one boundary. Note the layered redaction: the
+ArcGIS public view withholds crew notes, and the PostGIS public tier
+additionally bands the customer count and grid-snaps location
+(boundary-two-views.png). Authorization, not data location, determines what
+each consumer sees — the boundary is a property of the view, applied
+independently at every tier that serves.

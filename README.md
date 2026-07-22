@@ -42,7 +42,8 @@ hybrid-gis-architecture/
 │   ├── adr/                # ADR-001 .. ADR-008 (the tradeoff decisions)
 │   ├── cost-model.md       # the economics behind ADR-002: three delivery options, crossover analysis
 │   ├── enterprise-deployment.md  # open-source -> ArcGIS Enterprise translation + install order
-│   └── operations.md       # incident runbook (symptom -> diagnosis -> fix -> rule)
+│   ├── operations.md       # incident runbook (symptom -> diagnosis -> fix -> rule)
+│   └── ops-dashboard-spec.md  # internal operations dashboard build spec (Arcade + config)
 └── k8s/                    # illustrative Kubernetes manifests
 ```
 
@@ -75,6 +76,12 @@ feeders colored by voltage class, active outages sized by customers affected.
   (full matrix in [docs/interop.md](docs/interop.md)).
 - **The analyst persona:** R reading the same PostGIS the tile servers use —
   [analytics-outage-map](docs/img/analytics-outage-map.png).
+- **The operations persona:** an internal ArcGIS Dashboard on the system of
+  record, sharing crew notes and exact customer counts with authorized staff —
+  [internal-ops-dashboard](docs/img/internal-ops-dashboard.png) — while the
+  public view of the same outage omits them
+  ([public-popup-same-outage](docs/img/public-popup-same-outage.png)). The
+  trust boundary demonstrated at the application tier (see docs/ops-dashboard-spec.md).
 
 ## Design thesis
 
